@@ -9,18 +9,16 @@ RUN yarn build
 # ---- Setup Backend ----
 FROM node:18
 WORKDIR /app/backend
-COPY backend/package.json ./  
+COPY backend/package.json ./
 RUN yarn install
-COPY backend/ ./
+COPY backend/ ./              
 
-# フロントエンドのビルド成果物をバックエンドにコピー
+# フロントエンドのビルド成果物をバックエンドに統合
 COPY --from=frontend-build /app/frontend/build ./public
 
-# 環境変数を設定
+# ポートの設定
 ENV PORT=3000
-
-# 必要なポートを公開
 EXPOSE 3000
 
-# アプリケーションを起動
+# サーバーを起動
 CMD ["yarn", "start"]
