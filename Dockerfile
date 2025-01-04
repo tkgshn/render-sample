@@ -1,29 +1,26 @@
-# Use a Node.js base image
-FROM node:18 as build
+# ---- Build Frontend ----
+FROM node:18 AS frontend-build
+WORKDIR /app/frontend
+COPY frontend/package.json ./
+RUN yarn install
+COPY frontend/ ./
+RUN yarn build
 
-# Set working directory
-WORKDIR /app
-
-# Copy frontend files and install dependencies
-COPY frontend/package.json frontend/package-lock.json ./frontend/
-RUN cd frontend && npm install
-
-# Build the frontend
-COPY frontend ./frontend
-RUN cd frontend && npm run build
-
-# Copy backend files and install dependencies
-COPY backend/package.json backend/package-lock.json ./backend/
-RUN cd backend && npm install
-
-# Copy frontend build to backend public directory
-RUN cp -r frontend/build/* backend/public/
-
-# Set working directory to backend
+# ---- Setup Backend ----
+FROM node:18
 WORKDIR /app/backend
+COPY backend/package.json ./  
+RUN yarn install
+COPY backend/ ./
 
-# Expose the port the app runs on
+# フロントエンドのビルド成果物をバックエンドにコピー
+COPY --from=frontend-build /app/frontend/build ./public
+
+# 環境変数を設定
+ENV PORT=3000
+
+# 必要なポートを公開
 EXPOSE 3000
 
-# Start the application
-CMD ["npm", "start"]
+# アプリケーションを起動
+CMD ["yarn", "start"]
